@@ -58,9 +58,15 @@ class Conversations(APIView):
                 else:
                     convo_dict["otherUser"]["online"] = False
 
+                convo_dict['messages'].sort(
+                    key=lambda message: message['id'],
+                    reverse=False
+                )
+
                 conversations_response.append(convo_dict)
+
             conversations_response.sort(
-                key=lambda convo: convo["messages"][0]["createdAt"],
+                key=lambda convo: convo["messages"][-1]["createdAt"],
                 reverse=True,
             )
             return JsonResponse(
