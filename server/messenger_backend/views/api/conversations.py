@@ -69,6 +69,8 @@ class Conversations(APIView):
                     reverse=False
                 )
 
+                # convo_dict["messages"][-1*unreadAmount-1]["read"] = True
+
                 conversations_response.append(convo_dict)
 
             conversations_response.sort(

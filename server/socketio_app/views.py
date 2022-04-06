@@ -30,6 +30,13 @@ def new_message(sid, message):
         skip_sid=sid,
     )
 
+@sio.on("typing")
+def setOtherUserTyping(sid, conversation):
+    sio.emit(
+        "typing",
+        {"conversationId": conversation["conversationId"], "typing": conversation["typing"]},
+        skip_sid=sid,
+    )
 
 @sio.on("logout")
 def logout(sid, user_id):

@@ -96,6 +96,8 @@ const Home = ({ user, logout }) => {
 
   const addMessageToConversation = useCallback(
     (data) => {
+      console.log("data: ", data)
+      const senderId = data?.message?.senderId;
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
       if (sender !== null) {
@@ -103,6 +105,7 @@ const Home = ({ user, logout }) => {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
+          unreadAmount: senderId === user.id ? 0 : 1
         };
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
@@ -112,8 +115,10 @@ const Home = ({ user, logout }) => {
       const updatedConversations = conversations.map((convo) => {
         if (convo.id === message.conversationId) {
           const convoCopy = { ...convo };
+          // TODO: use otherUser to check activeConversation to decide if current user is in active chat or not
           convoCopy.messages.push(message);
           convoCopy.latestMessageText = message.text;
+          convoCopy.unreadAmount += senderId === user.id ? 0 : 1;
           return convoCopy;
         } else {
           return convo;
@@ -123,7 +128,7 @@ const Home = ({ user, logout }) => {
       sortConversationsByMostRecent(updatedConversations)
 
       setConversations(updatedConversations);
-  }, [setConversations, conversations]);
+  }, [setConversations, conversations, user]);
 
   const sortConversationsByMostRecent = (convos) => {
     convos.sort((a,b) => {
@@ -166,6 +171,49 @@ const Home = ({ user, logout }) => {
     );
   }, []);
 
+  const onMessageRead = async(conversationId=null) => {
+    const { data } = await axios.put("/api/readstatus", {
+      conversationId,
+    });
+    setConversations((prev) =>
+      prev.map((convo) => {
+        if (convo.id === conversationId) {
+          const convoCopy = { ...convo };
+          convoCopy.unreadAmount = data?.unreadAmount || 0
+          return convoCopy;
+        } else {
+          return convo;
+        }
+      }),
+    );
+    console.log('onMessageRead / data: ', data)
+  }
+
+  const setOtherUserTyping = useCallback((data) => {
+    const { conversationId, typing } = data;
+    console.log('setOtherUserTyping: ', conversationId, typing)
+    setConversations((prev) => 
+      prev.map((convo) => {
+        if(convo.id === conversationId) {
+          const convoCopy = { ...convo };
+          convoCopy.otherUserTyping = typing;
+          console.log('setOtherUserTyping / convoCopy: ', convoCopy)
+          return convoCopy;
+        } else {
+          return convo;
+        }
+      })
+    )
+  }, []);
+
+  const notifyTyping = (conversationId='', typing) => {
+    console.log('notifyTyping: ', typing)
+    socket.emit("typing", {
+      conversationId,
+      typing
+    });
+  }
+
   // Lifecycle
 
   useEffect(() => {
@@ -173,6 +221,7 @@ const Home = ({ user, logout }) => {
     socket.on("add-online-user", addOnlineUser);
     socket.on("remove-offline-user", removeOfflineUser);
     socket.on("new-message", addMessageToConversation);
+    socket.on("typing", setOtherUserTyping);
 
     return () => {
       // before the component is destroyed
@@ -180,8 +229,9 @@ const Home = ({ user, logout }) => {
       socket.off("add-online-user", addOnlineUser);
       socket.off("remove-offline-user", removeOfflineUser);
       socket.off("new-message", addMessageToConversation);
+      socket.off("typing", setOtherUserTyping);
     };
-  }, [addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
+  }, [setOtherUserTyping, addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
 
   useEffect(() => {
     // when fetching, prevent redirect
@@ -216,6 +266,8 @@ const Home = ({ user, logout }) => {
     }
   };
 
+  console.log('conversations: ', conversations)
+
   return (
     <>
       <Button onClick={handleLogout}>Logout</Button>
@@ -229,10 +281,16 @@ const Home = ({ user, logout }) => {
           setActiveChat={setActiveChat}
         />
         <ActiveChat
+          // TODO use ws to indicate whether the other user is typing or not,
+          // ActiveCHat will listen to chnages in this value
+          // which will then update 
+          // how do we indicate that we have read the message when we are already in this active chat?
           activeConversation={activeConversation}
           conversations={conversations}
           user={user}
           postMessage={postMessage}
+          onMessageRead={onMessageRead}
+          notifyTyping={notifyTyping}
         />
       </Grid>
     </>

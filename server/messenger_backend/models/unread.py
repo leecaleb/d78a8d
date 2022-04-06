@@ -1,3 +1,4 @@
+import sys
 from django.db import models
 from django.db.models import Q
 
@@ -21,6 +22,7 @@ class Unread(utils.CustomModel):
     def find_unread_amount(conversationId, userId):
         # return unread or None if it doesn't exist
         try:
+            print ('conversationId, userId: ', conversationId, userId)
             return Unread.objects.get(
                 (Q(conversation__id=conversationId) & Q(userId=userId))
             )
