@@ -81,7 +81,7 @@ const Home = ({ user, logout }) => {
     (recipientId, message) => {
       const updatedConversations = conversations.map((convo) => {
         if (convo.otherUser.id === recipientId) {
-          const convoCopy = { ...convo }
+          const convoCopy = { ...convo, messages: [ ...convo.messages ] };
           convoCopy.messages.push(message);
           convoCopy.latestMessageText = message.text;
           convoCopy.id = message.conversationId;
@@ -98,6 +98,7 @@ const Home = ({ user, logout }) => {
     (data) => {
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
+      let updatedConversations = [];
       if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
@@ -105,23 +106,22 @@ const Home = ({ user, logout }) => {
           messages: [message],
         };
         newConvo.latestMessageText = message.text;
-        setConversations((prev) => [newConvo, ...prev]);
+        updatedConversations = [newConvo, ...conversations];
+      } else {
+        // build new conversation list
+        updatedConversations = conversations.map((convo) => {
+          if (convo.id === message.conversationId) {
+            const convoCopy = { ...convo, messages: [ ...convo.messages ] };
+            convoCopy.messages.push(message);
+            convoCopy.latestMessageText = message.text;
+            return convoCopy;
+          } else {
+            return convo;
+          }
+        });
       }
 
-      // build new conversation list
-      const updatedConversations = conversations.map((convo) => {
-        if (convo.id === message.conversationId) {
-          const convoCopy = { ...convo };
-          convoCopy.messages.push(message);
-          convoCopy.latestMessageText = message.text;
-          return convoCopy;
-        } else {
-          return convo;
-        }
-      })
-
       sortConversationsByMostRecent(updatedConversations)
-
       setConversations(updatedConversations);
   }, [setConversations, conversations]);
 
