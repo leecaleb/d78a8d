@@ -2,7 +2,7 @@ from django.contrib.auth.middleware import get_user
 from django.db.models import Max, Q
 from django.db.models.query import Prefetch
 from django.http import HttpResponse, JsonResponse
-from messenger_backend.models import Conversation, Message
+from messenger_backend.models import Conversation, Message, Unread
 from online_users import online_users
 from rest_framework.views import APIView
 from rest_framework.request import Request
@@ -24,6 +24,9 @@ class Conversations(APIView):
             conversations = (
                 Conversation.objects.filter(Q(user1=user_id) | Q(user2=user_id))
                 .prefetch_related(
+                    Prefetch("unreadAmount", queryset=Unread.objects.filter(userId=user_id))
+                )
+                .prefetch_related(
                     Prefetch(
                         "messages", queryset=Message.objects.order_by("-createdAt")
                     )
@@ -34,8 +37,11 @@ class Conversations(APIView):
             conversations_response = []
 
             for convo in conversations:
+                unread = convo.unreadAmount.first()
+                unreadAmount = unread.unreadAmount if unread else 0
                 convo_dict = {
                     "id": convo.id,
+                    "unreadAmount": unreadAmount,
                     "messages": [
                         message.to_dict(["id", "text", "senderId", "createdAt"])
                         for message in convo.messages.all()
