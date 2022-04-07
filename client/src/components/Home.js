@@ -65,6 +65,7 @@ const Home = ({ user, logout }) => {
   const postMessage = async(body) => {
     try {
       const data = await saveMessage(body);
+
       if (!body.conversationId) {
         addNewConvo(body.recipientId, data.message);
       } else {
@@ -81,7 +82,7 @@ const Home = ({ user, logout }) => {
     (recipientId, message) => {
       const updatedConversations = conversations.map((convo) => {
         if (convo.otherUser.id === recipientId) {
-          const convoCopy = { ...convo }
+          const convoCopy = { ...convo, messages: [ ...convo.messages ] };
           convoCopy.messages.push(message);
           convoCopy.latestMessageText = message.text;
           convoCopy.id = message.conversationId;
@@ -89,10 +90,12 @@ const Home = ({ user, logout }) => {
         } else {
           return convo;
         }
-      })
+      });
       sortConversationsByMostRecent(updatedConversations)
       setConversations(updatedConversations);
-  },[setConversations, conversations]);
+    },
+    [setConversations, conversations],
+  );
 
   const addMessageToConversation = useCallback(
     (data) => {
@@ -100,6 +103,7 @@ const Home = ({ user, logout }) => {
       const senderId = data?.message?.senderId;
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
+      let updatedConversations = [];
       if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
@@ -108,25 +112,24 @@ const Home = ({ user, logout }) => {
           unreadAmount: senderId === user.id ? 0 : 1
         };
         newConvo.latestMessageText = message.text;
-        setConversations((prev) => [newConvo, ...prev]);
+        updatedConversations = [newConvo, ...conversations];
+      } else {
+        // build new conversation list
+        updatedConversations = conversations.map((convo) => {
+          if (convo.id === message.conversationId) {
+            const convoCopy = { ...convo };
+            // TODO: use otherUser to check activeConversation to decide if current user is in active chat or not
+            convoCopy.messages.push(message);
+            convoCopy.latestMessageText = message.text;
+            convoCopy.unreadAmount += senderId === user.id ? 0 : 1;
+            return convoCopy;
+          } else {
+            return convo;
+          }
+        })
       }
 
-      // build new conversation list
-      const updatedConversations = conversations.map((convo) => {
-        if (convo.id === message.conversationId) {
-          const convoCopy = { ...convo };
-          // TODO: use otherUser to check activeConversation to decide if current user is in active chat or not
-          convoCopy.messages.push(message);
-          convoCopy.latestMessageText = message.text;
-          convoCopy.unreadAmount += senderId === user.id ? 0 : 1;
-          return convoCopy;
-        } else {
-          return convo;
-        }
-      })
-
       sortConversationsByMostRecent(updatedConversations)
-
       setConversations(updatedConversations);
   }, [setConversations, conversations, user]);
 
