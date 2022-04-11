@@ -62,9 +62,10 @@ const Home = ({ user, logout }) => {
     });
   };
 
-  const postMessage = async(body) => {
+  const postMessage = (body) => {
     try {
-      const data = await saveMessage(body);
+      const data = saveMessage(body);
+
       if (!body.conversationId) {
         addNewConvo(body.recipientId, data.message);
       } else {
@@ -79,20 +80,17 @@ const Home = ({ user, logout }) => {
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
-      const updatedConversations = conversations.map((convo) => {
+      conversations.forEach((convo) => {
         if (convo.otherUser.id === recipientId) {
-          const convoCopy = { ...convo, messages: [ ...convo.messages ] };
-          convoCopy.messages.push(message);
-          convoCopy.latestMessageText = message.text;
-          convoCopy.id = message.conversationId;
-          return convoCopy;
-        } else {
-          return convo;
+          convo.messages.push(message);
+          convo.latestMessageText = message.text;
+          convo.id = message.conversationId;
         }
-      })
-      sortConversationsByMostRecent(updatedConversations)
-      setConversations(updatedConversations);
-  },[setConversations, conversations]);
+      });
+      setConversations(conversations);
+    },
+    [setConversations, conversations],
+  );
 
   const addMessageToConversation = useCallback(
     (data) => {
@@ -108,31 +106,16 @@ const Home = ({ user, logout }) => {
         setConversations((prev) => [newConvo, ...prev]);
       }
 
-      // build new conversation list
-      const updatedConversations = conversations.map((convo) => {
+      conversations.forEach((convo) => {
         if (convo.id === message.conversationId) {
-          const convoCopy = { ...convo, messages: [ ...convo.messages ] };
-          convoCopy.messages.push(message);
-          convoCopy.latestMessageText = message.text;
-          return convoCopy;
-        } else {
-          return convo;
+          convo.messages.push(message);
+          convo.latestMessageText = message.text;
         }
-      })
-
-      sortConversationsByMostRecent(updatedConversations)
-
-      setConversations(updatedConversations);
-  }, [setConversations, conversations]);
-
-  const sortConversationsByMostRecent = (convos) => {
-    convos.sort((a,b) => {
-      if (a.messages.length === 0 || b.messages.length === 0) return true;
-      const dateA = new Date(a.messages[a.messages.length-1]?.createdAt);
-      const dateB = new Date(b.messages[b.messages.length-1]?.createdAt); 
-      return dateB - dateA;
-    })
-  }
+      });
+      setConversations(conversations);
+    },
+    [setConversations, conversations],
+  );
 
   const setActiveChat = (username) => {
     setActiveConversation(username);
