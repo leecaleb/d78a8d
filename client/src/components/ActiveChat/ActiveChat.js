@@ -44,9 +44,12 @@ const ActiveChat = ({
     // how do update when we are already in the chat
     console.log('ActiveChat / useEffect: ', activeConversation)
     if (activeConversation !== null && conversation.unreadAmount > 0) {
-      onMessageRead(conversation.id)
+      onMessageRead(
+        conversation.id, 
+        conversation.messages[conversation.messages.length-1]?.id
+      )
     }
-  }, [activeConversation,])
+  }, [activeConversation, conversation?.unreadAmount])
 
   return (
     <Box className={classes.root}>

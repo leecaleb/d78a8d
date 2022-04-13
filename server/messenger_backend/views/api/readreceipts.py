@@ -1,11 +1,10 @@
 from django.contrib.auth.middleware import get_user
 from django.http import HttpResponse, JsonResponse
-from messenger_backend.models import Unread
+from messenger_backend.models import ReadReceipt, Conversation
 from rest_framework.views import APIView
 from rest_framework.request import Request
 
-
-class ReadStatus(APIView):
+class ReadReceipts(APIView):
     """"""
 
     def put(self, request: Request):
@@ -19,17 +18,18 @@ class ReadStatus(APIView):
             
             body = request.data
             conversation_id = body.get("conversationId")
-            print ('conversation_id: ', conversation_id)
-            print ('user_id: ', user_id)
+            message_id = body.get("messageId")
 
-            unread = Unread.find_unread_amount(conversation_id, user_id)
-            print ('unread: ', unread)
-            if unread:
-                unread.unreadAmount = 0
-                unread.save()
+            read_receipt = ReadReceipt.find_read_receipt(conversation_id, user_id)
+            if read_receipt:
+                read_receipt.messageId = message_id
+            else:
+                conversation = Conversation.objects.filter(id=conversation_id).first()
+                read_receipt = ReadReceipt(userId=user_id, conversation=conversation, messageId=message_id)
+            read_receipt.save()
 
             return JsonResponse({
-                "unreadAmount": unread.unreadAmount if unread else 0
+                "messageId": read_receipt.messageId if read_receipt else None
             },
                 safe=False,
             )

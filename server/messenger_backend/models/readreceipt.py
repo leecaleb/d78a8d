@@ -6,25 +6,25 @@ from . import utils
 from .conversation import Conversation
 from .user import User
 
-class Unread(utils.CustomModel):
+class ReadReceipt(utils.CustomModel):
     userId = models.IntegerField(null=False)
     conversation = models.ForeignKey(
         Conversation,
         on_delete=models.CASCADE,
         db_column="conversationId",
-        related_name="unreadAmount",
+        related_name="readReceipt",
     )
-    unreadAmount = models.IntegerField(null=False)
+    messageId = models.IntegerField(null=False)
     createdAt = models.DateTimeField(auto_now_add=True, db_index=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
-    # find unreadAmount given converation ID and user ID
-    def find_unread_amount(conversationId, userId):
-        # return unread or None if it doesn't exist
+    # find read receipt given converation ID and user ID
+    def find_read_receipt(conversationId, userId):
+        # return readReceipt or None if it doesn't exist
         try:
-            print ('conversationId, userId: ', conversationId, userId)
-            return Unread.objects.get(
+            # print ('conversationId, userId: ', conversationId, userId)
+            return ReadReceipt.objects.get(
                 (Q(conversation__id=conversationId) & Q(userId=userId))
             )
-        except Unread.DoesNotExist:
+        except ReadReceipt.DoesNotExist:
             return None

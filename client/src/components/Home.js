@@ -174,9 +174,10 @@ const Home = ({ user, logout }) => {
     );
   }, []);
 
-  const onMessageRead = async(conversationId=null) => {
-    const { data } = await axios.put("/api/readstatus", {
+  const onMessageRead = async(conversationId=null, messageId=null) => {
+    const { data } = await axios.put("/api/readreceipt", {
       conversationId,
+      messageId
     });
     setConversations((prev) =>
       prev.map((convo) => {
@@ -189,18 +190,16 @@ const Home = ({ user, logout }) => {
         }
       }),
     );
-    console.log('onMessageRead / data: ', data)
+    notifyMessageRead(conversationId, messageId)
   }
 
   const setOtherUserTyping = useCallback((data) => {
     const { conversationId, typing } = data;
-    console.log('setOtherUserTyping: ', conversationId, typing)
     setConversations((prev) => 
       prev.map((convo) => {
         if(convo.id === conversationId) {
           const convoCopy = { ...convo };
           convoCopy.otherUserTyping = typing;
-          console.log('setOtherUserTyping / convoCopy: ', convoCopy)
           return convoCopy;
         } else {
           return convo;
@@ -210,10 +209,34 @@ const Home = ({ user, logout }) => {
   }, []);
 
   const notifyTyping = (conversationId='', typing) => {
-    console.log('notifyTyping: ', typing)
     socket.emit("typing", {
       conversationId,
       typing
+    });
+  }
+
+  const setMessageRead = useCallback((data) => {
+    const {conversationId, messageId } = data;
+    setConversations((prev) => 
+      prev.map((convo) => {
+        if(convo.id === conversationId) {
+          const convoCopy = { ...convo };
+          convoCopy.otherUser = {
+            ...convoCopy.otherUser,
+            lastReadMessageId: messageId
+          }
+          return convoCopy;
+        } else {
+          return convo;
+        }
+      })
+    )
+  }, [])
+
+  const notifyMessageRead = (conversationId='', messageId='') => {
+    socket.emit("messageRead", {
+      conversationId,
+      messageId
     });
   }
 
@@ -225,6 +248,7 @@ const Home = ({ user, logout }) => {
     socket.on("remove-offline-user", removeOfflineUser);
     socket.on("new-message", addMessageToConversation);
     socket.on("typing", setOtherUserTyping);
+    socket.on("messageRead", setMessageRead);
 
     return () => {
       // before the component is destroyed
@@ -233,6 +257,7 @@ const Home = ({ user, logout }) => {
       socket.off("remove-offline-user", removeOfflineUser);
       socket.off("new-message", addMessageToConversation);
       socket.off("typing", setOtherUserTyping);
+      socket.off("messageRead", setMessageRead);
     };
   }, [setOtherUserTyping, addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
 

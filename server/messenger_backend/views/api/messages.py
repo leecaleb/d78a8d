@@ -1,6 +1,6 @@
 from django.contrib.auth.middleware import get_user
 from django.http import HttpResponse, JsonResponse
-from messenger_backend.models import Conversation, Message, Unread
+from messenger_backend.models import Conversation, Message
 from online_users import online_users
 from rest_framework.views import APIView
 
@@ -37,13 +37,6 @@ class Messages(APIView):
 
                 if sender and sender["id"] in online_users:
                     sender["online"] = True
-
-            unread = Unread.find_unread_amount(conversation.id, recipient_id)
-            if not unread:
-                unread = Unread(userId=recipient_id, conversation=conversation, unreadAmount=1)
-            else:
-                unread.unreadAmount += 1
-            unread.save()
 
             message = Message(senderId=sender_id, text=text, conversation=conversation)
             message.save()

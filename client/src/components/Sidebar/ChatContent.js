@@ -42,6 +42,12 @@ const useStyles = makeStyles((theme) => ({
     color: "#FFFFFF",
     fontWeight: 'bold',
     textAlign: "center"
+  },
+  typing: {
+    fontSize: 12,
+    color: "#9CADC8",
+    letterSpacing: -0.17,
+    fontStyle: 'italic'
   }
 }));
 
@@ -65,7 +71,7 @@ const ChatContent = ({ conversation }) => {
           {latestMessageText}
         </Typography>}
 
-        {!!userTyping && <Typography className={conversation.unreadAmount > 0 ? classes.previewUnreadText : classes.previewText}>
+        {!!userTyping && <Typography className={classes.typing}>
           {"Typing..."}
         </Typography>}
       </Box>
