@@ -99,7 +99,6 @@ const Home = ({ user, logout }) => {
 
   const addMessageToConversation = useCallback(
     (data) => {
-      console.log("data: ", data)
       const senderId = data?.message?.senderId;
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
@@ -109,7 +108,7 @@ const Home = ({ user, logout }) => {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
-          unreadAmount: senderId === user.id ? 0 : 1
+          unreadAmount: senderId === user.id ? 0 : 1,
         };
         newConvo.latestMessageText = message.text;
         updatedConversations = [newConvo, ...conversations];
@@ -117,8 +116,7 @@ const Home = ({ user, logout }) => {
         // build new conversation list
         updatedConversations = conversations.map((convo) => {
           if (convo.id === message.conversationId) {
-            const convoCopy = { ...convo };
-            // TODO: use otherUser to check activeConversation to decide if current user is in active chat or not
+            const convoCopy = { ...convo, messages: [ ...convo.messages ] };
             convoCopy.messages.push(message);
             convoCopy.latestMessageText = message.text;
             convoCopy.unreadAmount += senderId === user.id ? 0 : 1;
@@ -126,7 +124,7 @@ const Home = ({ user, logout }) => {
           } else {
             return convo;
           }
-        })
+        });
       }
 
       sortConversationsByMostRecent(updatedConversations)
@@ -192,6 +190,13 @@ const Home = ({ user, logout }) => {
     );
     notifyMessageRead(conversationId, messageId)
   }
+  
+  const notifyMessageRead = (conversationId='', messageId='') => {
+    socket.emit("messageRead", {
+      conversationId,
+      messageId
+    });
+  }
 
   const setOtherUserTyping = useCallback((data) => {
     const { conversationId, typing } = data;
@@ -233,12 +238,6 @@ const Home = ({ user, logout }) => {
     )
   }, [])
 
-  const notifyMessageRead = (conversationId='', messageId='') => {
-    socket.emit("messageRead", {
-      conversationId,
-      messageId
-    });
-  }
 
   // Lifecycle
 
@@ -259,7 +258,7 @@ const Home = ({ user, logout }) => {
       socket.off("typing", setOtherUserTyping);
       socket.off("messageRead", setMessageRead);
     };
-  }, [setOtherUserTyping, addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
+  }, [addOnlineUser, removeOfflineUser, addMessageToConversation, setOtherUserTyping, setMessageRead, socket]);
 
   useEffect(() => {
     // when fetching, prevent redirect
@@ -294,8 +293,6 @@ const Home = ({ user, logout }) => {
     }
   };
 
-  console.log('conversations: ', conversations)
-
   return (
     <>
       <Button onClick={handleLogout}>Logout</Button>
@@ -309,10 +306,6 @@ const Home = ({ user, logout }) => {
           setActiveChat={setActiveChat}
         />
         <ActiveChat
-          // TODO use ws to indicate whether the other user is typing or not,
-          // ActiveCHat will listen to chnages in this value
-          // which will then update 
-          // how do we indicate that we have read the message when we are already in this active chat?
           activeConversation={activeConversation}
           conversations={conversations}
           user={user}

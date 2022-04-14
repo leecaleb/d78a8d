@@ -58,8 +58,6 @@ const ChatContent = ({ conversation }) => {
   const latestMessageText = conversation.id && conversation.latestMessageText;
   const userTyping = conversation.otherUserTyping;
 
-  // console.log('ChatContent / conversation: ', conversation)
-
   return (
     <Box className={classes.root}>
       <Box>
@@ -67,9 +65,14 @@ const ChatContent = ({ conversation }) => {
           {otherUser.username}
         </Typography>
 
-        {!userTyping && <Typography className={conversation.unreadAmount > 0 ? classes.previewUnreadText : classes.previewText}>
-          {latestMessageText}
-        </Typography>}
+        {!userTyping && 
+          <Typography
+            data-cy={"previewUnreadText"}
+            className={conversation.unreadAmount > 0 ? classes.previewUnreadText : classes.previewText}
+          >
+            {latestMessageText}
+          </Typography>
+        }
 
         {!!userTyping && <Typography className={classes.typing}>
           {"Typing..."}
@@ -79,7 +82,10 @@ const ChatContent = ({ conversation }) => {
       {conversation.unreadAmount > 0 &&
       <Box className={classes.unreadAmount}>
         <Box className={classes.unreadAmountBadge}>
-          <Typography className={classes.unreadAmountText}>
+          <Typography
+            data-cy={"unreadAmountText"}
+            className={classes.unreadAmountText}
+          >
             {conversation.unreadAmount}
           </Typography>
         </Box>

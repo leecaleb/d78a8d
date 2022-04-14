@@ -27,8 +27,6 @@ const Sidebar = ({
 }) => {
   const classes = useStyles();
 
-  // console.log('Sidebar / conversations: ', conversations)
-
   return (
     <Box className={classes.root}>
       <CurrentUser user={user} />

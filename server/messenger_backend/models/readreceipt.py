@@ -22,7 +22,6 @@ class ReadReceipt(utils.CustomModel):
     def find_read_receipt(conversationId, userId):
         # return readReceipt or None if it doesn't exist
         try:
-            # print ('conversationId, userId: ', conversationId, userId)
             return ReadReceipt.objects.get(
                 (Q(conversation__id=conversationId) & Q(userId=userId))
             )

@@ -41,14 +41,13 @@ const ActiveChat = ({
 
   useEffect(() => { 
     // chat updates read status when we change active conversation
-    // how do update when we are already in the chat
-    console.log('ActiveChat / useEffect: ', activeConversation)
     if (activeConversation !== null && conversation.unreadAmount > 0) {
       onMessageRead(
         conversation.id, 
         conversation.messages[conversation.messages.length-1]?.id
       )
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConversation, conversation?.unreadAmount])
 
   return (
