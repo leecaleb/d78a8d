@@ -11,7 +11,7 @@ const alice = {
     password: "L%e$xZHC4QKP@F",
   };
   
-  describe("Bug Fix: Sending Messages", () => {
+  describe("Read Status", () => {
     it("setup", () => {
       cy.signup(alice.username, alice.email, alice.password);
       cy.logout();
