@@ -1,6 +1,6 @@
 from django.contrib.auth.middleware import get_user
 from django.http import HttpResponse, JsonResponse
-from messenger_backend.models import ReadReceipt, Conversation
+from messenger_backend.models import ConversationUser, Conversation
 from rest_framework.views import APIView
 from rest_framework.request import Request
 
@@ -20,18 +20,18 @@ class ReadReceipts(APIView):
             conversation_id = body.get("conversationId")
             message_id = body.get("messageId")
 
-            read_receipt = ReadReceipt.find_read_receipt(conversation_id, user_id)
+            read_receipt = ConversationUser.find_read_receipt(conversation_id, user_id)
             if read_receipt:
-                read_receipt.messageId = message_id
+                read_receipt.lastMessageReadId = message_id
             else:
                 conversation = Conversation.objects.filter(id=conversation_id).first()
                 if conversation is None:
                     return HttpResponse(status=400)
-                read_receipt = ReadReceipt(userId=user_id, conversation=conversation, messageId=message_id)
+                read_receipt = ConversationUser(userId=user_id, conversation=conversation, lastMessageReadId=message_id)
             read_receipt.save()
 
             return JsonResponse({
-                "messageId": read_receipt.messageId if read_receipt else None
+                "messageId": read_receipt.lastMessageReadId if read_receipt else None
             },
                 safe=False,
             )

@@ -6,24 +6,26 @@ from . import utils
 from .conversation import Conversation
 from .user import User
 
-class ReadReceipt(utils.CustomModel):
-    userId = models.IntegerField(null=False)
+class ConversationUser(utils.CustomModel):
+    userId = models.ForeignKey(
+        User, on_delete=models.CASCADE, db_column="userId", related_name="+"
+    )
     conversation = models.ForeignKey(
         Conversation,
         on_delete=models.CASCADE,
         db_column="conversationId",
-        related_name="readReceipt",
+        related_name="userList",
     )
-    messageId = models.IntegerField(null=False)
+    lastMessageReadId = models.IntegerField(null=False)
     createdAt = models.DateTimeField(auto_now_add=True, db_index=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
     # find read receipt given converation ID and user ID
     def find_read_receipt(conversationId, userId):
-        # return readReceipt or None if it doesn't exist
+        # return conversation or None if it doesn't exist
         try:
-            return ReadReceipt.objects.get(
+            return ConversationUser.objects.get(
                 (Q(conversation__id=conversationId) & Q(userId=userId))
             )
-        except ReadReceipt.DoesNotExist:
+        except ConversationUser.DoesNotExist:
             return None
