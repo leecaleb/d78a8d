@@ -27,7 +27,10 @@ class ReadReceipts(APIView):
                 conversation = Conversation.objects.filter(id=conversation_id).first()
                 if conversation is None:
                     return HttpResponse(status=400)
+                if conversation.user1.id != user_id and conversation.user2.id != user_id:
+                    return HttpResponse(status=403)
                 read_receipt = ReadReceipt(userId=user_id, conversation=conversation, messageId=message_id)
+                
             read_receipt.save()
 
             return JsonResponse({

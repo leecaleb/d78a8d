@@ -15,7 +15,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const Input = ({ otherUser, conversationId, user, postMessage, notifyTyping }) => {
+const Input = ({ otherUser, conversationId, user, postMessage }) => {
   const classes = useStyles();
   const [text, setText] = useState('');
 
@@ -38,14 +38,6 @@ const Input = ({ otherUser, conversationId, user, postMessage, notifyTyping }) =
     setText('');
   };
 
-  const handleOnFocus = () => {
-    notifyTyping(conversationId, true);
-  }
-
-  const handleOnBlur = () => {
-    notifyTyping(conversationId, false)
-  }
-
   return (
     <form className={classes.root} onSubmit={handleSubmit}>
       <FormControl fullWidth hiddenLabel>
@@ -56,8 +48,6 @@ const Input = ({ otherUser, conversationId, user, postMessage, notifyTyping }) =
           value={text}
           name="text"
           onChange={handleChange}
-          onFocus={handleOnFocus}
-          onBlur={handleOnBlur}
         />
       </FormControl>
     </form>

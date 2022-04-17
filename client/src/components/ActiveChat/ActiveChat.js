@@ -25,7 +25,6 @@ const ActiveChat = ({
   activeConversation,
   postMessage,
   onMessageRead,
-  notifyTyping
 }) => {
   const classes = useStyles();
 
@@ -65,14 +64,12 @@ const ActiveChat = ({
                   messages={conversation.messages}
                   otherUser={conversation.otherUser}
                   userId={user.id}
-                  otherUserTyping={conversation.otherUserTyping}
                 />
                 <Input
                   otherUser={conversation.otherUser}
                   conversationId={conversation.id || null}
                   user={user}
                   postMessage={postMessage}
-                  notifyTyping={notifyTyping}
                 />
               </>
             )}

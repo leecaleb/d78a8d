@@ -86,6 +86,7 @@ const Home = ({ user, logout }) => {
           convoCopy.messages.push(message);
           convoCopy.latestMessageText = message.text;
           convoCopy.id = message.conversationId;
+          convoCopy.unreadAmount = 0;
           return convoCopy;
         } else {
           return convo;
@@ -198,28 +199,6 @@ const Home = ({ user, logout }) => {
     });
   }
 
-  const setOtherUserTyping = useCallback((data) => {
-    const { conversationId, typing } = data;
-    setConversations((prev) => 
-      prev.map((convo) => {
-        if(convo.id === conversationId) {
-          const convoCopy = { ...convo };
-          convoCopy.otherUserTyping = typing;
-          return convoCopy;
-        } else {
-          return convo;
-        }
-      })
-    )
-  }, []);
-
-  const notifyTyping = (conversationId='', typing) => {
-    socket.emit("typing", {
-      conversationId,
-      typing
-    });
-  }
-
   const setMessageRead = useCallback((data) => {
     const {conversationId, messageId } = data;
     setConversations((prev) => 
@@ -246,7 +225,6 @@ const Home = ({ user, logout }) => {
     socket.on("add-online-user", addOnlineUser);
     socket.on("remove-offline-user", removeOfflineUser);
     socket.on("new-message", addMessageToConversation);
-    socket.on("typing", setOtherUserTyping);
     socket.on("messageRead", setMessageRead);
 
     return () => {
@@ -255,10 +233,9 @@ const Home = ({ user, logout }) => {
       socket.off("add-online-user", addOnlineUser);
       socket.off("remove-offline-user", removeOfflineUser);
       socket.off("new-message", addMessageToConversation);
-      socket.off("typing", setOtherUserTyping);
       socket.off("messageRead", setMessageRead);
     };
-  }, [addOnlineUser, removeOfflineUser, addMessageToConversation, setOtherUserTyping, setMessageRead, socket]);
+  }, [addOnlineUser, removeOfflineUser, addMessageToConversation, setMessageRead, socket]);
 
   useEffect(() => {
     // when fetching, prevent redirect
@@ -311,7 +288,6 @@ const Home = ({ user, logout }) => {
           user={user}
           postMessage={postMessage}
           onMessageRead={onMessageRead}
-          notifyTyping={notifyTyping}
         />
       </Grid>
     </>
