@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography } from "@material-ui/core";
+import { Box, Typography, Badge } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
@@ -9,7 +9,6 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
     marginLeft: 20,
     flexGrow: 1,
-    // backgroundColor: 'rgba(0,0,0,0.2)'
   },
   username: {
     fontWeight: "bold",
@@ -27,28 +26,10 @@ const useStyles = makeStyles((theme) => ({
     letterSpacing: -0.17,
   },
   unreadAmount: {
-    // backgroundColor: 'blue',
     display: "flex",
     alignItems: 'center',
     padding: 10
   },
-  unreadAmountBadge: {
-    backgroundColor: "#3A8DFF",
-    padding: "3px 7px",
-    borderRadius: 10
-  },
-  unreadAmountText: {
-    fontSize: 10,
-    color: "#FFFFFF",
-    fontWeight: 'bold',
-    textAlign: "center"
-  },
-  typing: {
-    fontSize: 12,
-    color: "#9CADC8",
-    letterSpacing: -0.17,
-    fontStyle: 'italic'
-  }
 }));
 
 const ChatContent = ({ conversation }) => {
@@ -56,7 +37,6 @@ const ChatContent = ({ conversation }) => {
 
   const { otherUser } = conversation;
   const latestMessageText = conversation.id && conversation.latestMessageText;
-  const userTyping = conversation.otherUserTyping;
 
   return (
     <Box className={classes.root}>
@@ -65,30 +45,17 @@ const ChatContent = ({ conversation }) => {
           {otherUser.username}
         </Typography>
 
-        {!userTyping && 
-          <Typography
-            data-cy={"previewUnreadText"}
-            className={conversation.unreadAmount > 0 ? classes.previewUnreadText : classes.previewText}
-          >
-            {latestMessageText}
-          </Typography>
-        }
-
-        {!!userTyping && <Typography className={classes.typing}>
-          {"Typing..."}
-        </Typography>}
+        <Typography
+          data-cy={"previewUnreadText"}
+          className={conversation.unreadAmount > 0 ? classes.previewUnreadText : classes.previewText}
+        >
+          {latestMessageText}
+        </Typography>
       </Box>
 
       {conversation.unreadAmount > 0 &&
       <Box className={classes.unreadAmount}>
-        <Box className={classes.unreadAmountBadge}>
-          <Typography
-            data-cy={"unreadAmountText"}
-            className={classes.unreadAmountText}
-          >
-            {conversation.unreadAmount}
-          </Typography>
-        </Box>
+        <Badge badgeContent={conversation.unreadAmount} color="primary" />
       </Box>}
     </Box>
   );
