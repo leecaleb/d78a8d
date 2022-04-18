@@ -29,7 +29,14 @@ def new_message(sid, message):
         {"message": message["message"], "sender": message["sender"]},
         skip_sid=sid,
     )
-
+    
+@sio.on("messageRead")
+def setMessageRead(sid, conversation):
+    sio.emit(
+        "messageRead",
+        {"conversationId": conversation["conversationId"], "messageId": conversation["messageId"]},
+        skip_sid=sid,
+    )
 
 @sio.on("logout")
 def logout(sid, user_id):

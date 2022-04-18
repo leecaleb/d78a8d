@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box } from '@material-ui/core';
 import { Input, Header, Messages } from './index';
@@ -24,6 +24,7 @@ const ActiveChat = ({
   conversations,
   activeConversation,
   postMessage,
+  onMessageRead,
 }) => {
   const classes = useStyles();
 
@@ -36,6 +37,17 @@ const ActiveChat = ({
   const isConversation = (obj) => {
     return obj !== {} && obj !== undefined;
   };
+
+  useEffect(() => { 
+    // chat updates read status when we change active conversation
+    if (activeConversation !== null && conversation.unreadAmount > 0) {
+      onMessageRead(
+        conversation.id, 
+        conversation.messages[conversation.messages.length-1]?.id
+      )
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConversation, conversation?.unreadAmount])
 
   return (
     <Box className={classes.root}>

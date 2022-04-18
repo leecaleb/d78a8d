@@ -86,6 +86,7 @@ const Home = ({ user, logout }) => {
           convoCopy.messages.push(message);
           convoCopy.latestMessageText = message.text;
           convoCopy.id = message.conversationId;
+          convoCopy.unreadAmount = 0;
           return convoCopy;
         } else {
           return convo;
@@ -99,6 +100,7 @@ const Home = ({ user, logout }) => {
 
   const addMessageToConversation = useCallback(
     (data) => {
+      const senderId = data?.message?.senderId;
       // if sender isn't null, that means the message needs to be put in a brand new convo
       const { message, sender = null } = data;
       let updatedConversations = [];
@@ -107,6 +109,7 @@ const Home = ({ user, logout }) => {
           id: message.conversationId,
           otherUser: sender,
           messages: [message],
+          unreadAmount: senderId === user.id ? 0 : 1,
         };
         newConvo.latestMessageText = message.text;
         updatedConversations = [newConvo, ...conversations];
@@ -117,6 +120,7 @@ const Home = ({ user, logout }) => {
             const convoCopy = { ...convo, messages: [ ...convo.messages ] };
             convoCopy.messages.push(message);
             convoCopy.latestMessageText = message.text;
+            convoCopy.unreadAmount += senderId === user.id ? 0 : 1;
             return convoCopy;
           } else {
             return convo;
@@ -126,7 +130,7 @@ const Home = ({ user, logout }) => {
 
       sortConversationsByMostRecent(updatedConversations)
       setConversations(updatedConversations);
-  }, [setConversations, conversations]);
+  }, [setConversations, conversations, user]);
 
   const sortConversationsByMostRecent = (convos) => {
     convos.sort((a,b) => {
@@ -169,6 +173,51 @@ const Home = ({ user, logout }) => {
     );
   }, []);
 
+  const onMessageRead = async(conversationId=null, messageId=null) => {
+    const { data } = await axios.put("/api/readreceipt", {
+      conversationId,
+      messageId
+    });
+    setConversations((prev) =>
+      prev.map((convo) => {
+        if (convo.id === conversationId) {
+          const convoCopy = { ...convo };
+          convoCopy.unreadAmount = data?.unreadAmount || 0
+          return convoCopy;
+        } else {
+          return convo;
+        }
+      }),
+    );
+    notifyMessageRead(conversationId, messageId)
+  }
+  
+  const notifyMessageRead = (conversationId='', messageId='') => {
+    socket.emit("messageRead", {
+      conversationId,
+      messageId
+    });
+  }
+
+  const setMessageRead = useCallback((data) => {
+    const {conversationId, messageId } = data;
+    setConversations((prev) => 
+      prev.map((convo) => {
+        if(convo.id === conversationId) {
+          const convoCopy = { ...convo };
+          convoCopy.otherUser = {
+            ...convoCopy.otherUser,
+            lastReadMessageId: messageId
+          }
+          return convoCopy;
+        } else {
+          return convo;
+        }
+      })
+    )
+  }, [])
+
+
   // Lifecycle
 
   useEffect(() => {
@@ -176,6 +225,7 @@ const Home = ({ user, logout }) => {
     socket.on("add-online-user", addOnlineUser);
     socket.on("remove-offline-user", removeOfflineUser);
     socket.on("new-message", addMessageToConversation);
+    socket.on("messageRead", setMessageRead);
 
     return () => {
       // before the component is destroyed
@@ -183,8 +233,9 @@ const Home = ({ user, logout }) => {
       socket.off("add-online-user", addOnlineUser);
       socket.off("remove-offline-user", removeOfflineUser);
       socket.off("new-message", addMessageToConversation);
+      socket.off("messageRead", setMessageRead);
     };
-  }, [addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
+  }, [addOnlineUser, removeOfflineUser, addMessageToConversation, setMessageRead, socket]);
 
   useEffect(() => {
     // when fetching, prevent redirect
@@ -236,6 +287,7 @@ const Home = ({ user, logout }) => {
           conversations={conversations}
           user={user}
           postMessage={postMessage}
+          onMessageRead={onMessageRead}
         />
       </Grid>
     </>

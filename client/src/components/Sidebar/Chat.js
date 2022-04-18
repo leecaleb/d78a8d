@@ -24,7 +24,7 @@ const Chat = ({ conversation, setActiveChat }) => {
   const handleClick = async (conversation) => {
     await setActiveChat(conversation.otherUser.username);
   };
-
+  
   return (
     <Box onClick={() => handleClick(conversation)} className={classes.root}>
       <BadgeAvatar
